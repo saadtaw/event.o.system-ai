@@ -1,0 +1,1091 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EventOps AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<script>document.documentElement.lang='ar';document.documentElement.dir='rtl';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-deep:#0A0638; --bg-surface:#14108A; --brand-indigo:#2A14E0; --brand-violet:#6B3BFF;
+  --brand-lavender:#B8A4FF; --glow:#E4DBFF; --text:#FFFFFF; --text-muted:#C9C2F2;
+  --line:rgba(184,164,255,.22); --card:rgba(30,22,160,.38); --card-2:rgba(10,6,56,.55);
+  --s-scheduled:#8A85B8; --s-near:#FFC24B; --s-arrived:#4FC3FF; --s-received:#B8A4FF; --s-escorted:#3DDC97;
+  --danger:#FF5470; --ok:#3DDC97; --warn:#FFC24B;
+  --r-card:14px; --r-btn:12px;
+  color-scheme:dark;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:31;background:var(--bg-deep)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:"IBM Plex Sans Arabic",system-ui,sans-serif; color:var(--text); font-size:16px; line-height:1.55;
+  background:
+    radial-gradient(1100px 620px at 92% -12%, rgba(107,59,255,.55), transparent 60%),
+    radial-gradient(900px 600px at -5% 105%, rgba(42,20,224,.45), transparent 60%),
+    var(--bg-deep);
+  background-attachment:fixed; min-height:100vh; overflow-x:hidden; direction:rtl;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;line-height:1.3}
+.muted{color:var(--text-muted)}
+.small{font-size:13px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:rgba(10,6,56,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{width:38px;height:38px;flex:none;filter:drop-shadow(0 0 8px rgba(184,164,255,.6))}
+.brand b{display:block;font-size:17px;letter-spacing:.3px}
+.brand span{display:block;font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.switcher{display:flex;gap:8px;align-items:center;flex:1;justify-content:center;min-width:0}
+.switcher label{font-size:12px;color:var(--brand-lavender);white-space:nowrap}
+.sel{background:var(--card-2);border:1px solid var(--line);border-radius:10px;min-height:44px;padding:0 12px;max-width:100%}
+.sel:focus,.inp:focus,.btn:focus-visible,.chip:focus-visible{outline:2px solid var(--brand-violet);outline-offset:2px}
+.switcher .sel{min-width:0}
+.top-actions{display:flex;gap:8px;margin-inline-start:auto}
+.iconbtn{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card-2);display:grid;place-items:center;cursor:pointer}
+.iconbtn:hover{border-color:var(--brand-lavender)}
+.badge{position:absolute;top:-6px;inset-inline-end:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--danger);font-size:12px;font-weight:700;display:grid;place-items:center}
+.demo-tag{font-size:11px;padding:2px 8px;border-radius:20px;border:1px dashed var(--brand-lavender);color:var(--brand-lavender)}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:0;max-width:1440px;margin:0 auto}
+.rail{position:sticky;top:66px;align-self:start;padding:18px 12px;display:flex;flex-direction:column;gap:6px;height:calc(100vh - 66px)}
+.navbtn{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 14px;border-radius:12px;border:1px solid transparent;background:none;cursor:pointer;text-align:start;font-weight:500;color:var(--text-muted)}
+.navbtn:hover{background:rgba(107,59,255,.18);color:var(--text)}
+.navbtn.on{background:linear-gradient(90deg,rgba(42,20,224,.25),rgba(42,20,224,.9));color:#fff;border-color:rgba(228,219,255,.45);box-shadow:0 0 18px rgba(107,59,255,.45)}
+.rail-foot{margin-top:auto;font-size:12px;color:var(--text-muted);padding:10px;border-top:1px solid var(--line)}
+main{padding-block:20px 40px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));min-width:0}
+.bottomnav{display:none}
+
+/* ---------- page head (angled panel like the deck) ---------- */
+.pagehead{position:relative;overflow:hidden;border-radius:18px;padding:22px 24px;margin-bottom:18px;
+  background:linear-gradient(180deg,rgba(20,16,138,.55),rgba(10,6,56,.4));border:1px solid var(--line);
+  display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.pagehead::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:38%;
+  background:linear-gradient(160deg,#3A1CFF,#2A14E0 60%,#1d10a8);clip-path:polygon(0 0,100% 0,82% 100%,0 100%);opacity:.55;z-index:0}
+.pagehead>*{position:relative;z-index:1}
+.eyebrow{font-size:13px;color:var(--brand-lavender);margin:0 0 4px}
+.pagehead h1{font-size:26px}
+.pagehead p{margin:4px 0 0}
+
+/* ---------- cards & grids ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:18px;min-width:0}
+.card.glow{border-color:rgba(228,219,255,.5);box-shadow:0 0 0 1px rgba(228,219,255,.08),0 0 22px rgba(107,59,255,.35)}
+.card h2{font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .i{color:var(--brand-lavender)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 14px;align-items:center}
+.kv dt{color:var(--text-muted);font-size:14px;display:flex;gap:6px;align-items:center}
+.kv dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.mt{margin-top:16px}
+
+/* ---------- buttons ---------- */
+.btn{min-height:52px;padding:0 20px;border-radius:var(--r-btn);border:1px solid var(--line);background:var(--card-2);
+  font-weight:700;font-size:17px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s, box-shadow .2s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(180deg,#3A22F0,var(--brand-indigo));border-color:rgba(228,219,255,.55);box-shadow:0 0 18px rgba(107,59,255,.5)}
+.btn-primary:hover{box-shadow:0 0 26px rgba(184,164,255,.6)}
+.btn-ok{background:linear-gradient(180deg,#2fc487,#1f9e6a);border-color:rgba(61,220,151,.6)}
+.btn-warn{background:rgba(255,194,75,.14);border-color:rgba(255,194,75,.55);color:#FFE2A6}
+.btn-ghost{background:transparent}
+.btn-sm{min-height:44px;font-size:15px;padding:0 14px}
+.btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn-block{width:100%}
+.bigpair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bigpair .btn{min-height:72px;font-size:20px;border-radius:16px}
+
+/* ---------- chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--line);background:var(--card-2);cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:var(--brand-indigo);border-color:var(--glow);box-shadow:0 0 14px rgba(107,59,255,.55)}
+.st{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid;white-space:nowrap}
+.st .i{width:15px;height:15px}
+.st-scheduled{color:var(--s-scheduled);border-color:rgba(138,133,184,.5);background:rgba(138,133,184,.12)}
+.st-near{color:var(--s-near);border-color:rgba(255,194,75,.5);background:rgba(255,194,75,.12)}
+.st-arrived{color:var(--s-arrived);border-color:rgba(79,195,255,.5);background:rgba(79,195,255,.12)}
+.st-received{color:var(--s-received);border-color:rgba(184,164,255,.5);background:rgba(184,164,255,.12)}
+.st-escorted{color:var(--s-escorted);border-color:rgba(61,220,151,.5);background:rgba(61,220,151,.12)}
+.st-danger{color:#FF8FA2;border-color:rgba(255,84,112,.6);background:rgba(255,84,112,.14)}
+.st-plain{color:var(--text-muted);border-color:var(--line);background:transparent;font-weight:500}
+.pr-urgent{color:#FF8FA2;border-color:rgba(255,84,112,.6)}
+.pr-medium{color:#FFD27A;border-color:rgba(255,194,75,.5)}
+.pr-normal{color:var(--text-muted);border-color:var(--line)}
+
+/* ---------- inputs ---------- */
+.inp{width:100%;min-height:50px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card-2)}
+textarea.inp{min-height:96px;resize:vertical}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-size:14px;color:var(--text-muted)}
+
+/* ---------- hex avatar ---------- */
+.hex{width:46px;height:52px;flex:none;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  display:grid;place-items:center;font-weight:700;font-size:15px;background:linear-gradient(160deg,var(--brand-violet),var(--brand-indigo))}
+.hex.lg{width:76px;height:86px;font-size:24px;box-shadow:0 0 30px rgba(184,164,255,.6)}
+.hex.sm{width:30px;height:34px;font-size:11px}
+
+/* ---------- guest timeline ---------- */
+.timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:6px}
+.tl{text-align:center;font-size:12px;color:var(--text-muted)}
+.tl .dot{width:30px;height:34px;margin:0 auto 6px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(184,164,255,.18);display:grid;place-items:center}
+.tl.done .dot{background:var(--brand-indigo);box-shadow:0 0 12px rgba(107,59,255,.7)}
+.tl.done{color:#fff}
+.tl.cur .dot{background:linear-gradient(160deg,#fff,var(--brand-lavender));color:var(--bg-deep)}
+.tl .dot .i{width:16px;height:16px}
+
+/* ---------- gate picker ---------- */
+.gates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gate{min-height:76px;border-radius:14px;border:1px solid var(--line);background:var(--card-2);cursor:pointer;padding:10px 12px;text-align:start}
+.gate b{display:block;font-size:17px}
+.gate small{color:var(--text-muted)}
+.gate.on{background:linear-gradient(160deg,rgba(58,34,240,.95),rgba(42,20,224,.7));border-color:var(--glow);box-shadow:0 0 18px rgba(107,59,255,.55)}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{border-radius:14px;padding:14px 16px;background:var(--card);border:1px solid var(--line);display:flex;gap:12px;align-items:center;min-width:0}
+.kpi .hex{width:40px;height:46px}
+.kpi .n{font-size:28px;font-weight:700;line-height:1}
+.kpi .l{font-size:13px;color:var(--text-muted)}
+.kpi.alert{border-color:rgba(255,84,112,.6);box-shadow:0 0 16px rgba(255,84,112,.25)}
+.kpi.alert .hex{background:linear-gradient(160deg,#ff7a8f,#c92a4a)}
+
+/* ---------- board ---------- */
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.col{background:var(--card-2);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}
+.col h3{font-size:15px}
+.gchip{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:rgba(42,20,224,.18);margin-top:6px;min-width:0}
+.gchip .nm{font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot-s{width:10px;height:10px;border-radius:50%;flex:none}
+.bar{height:8px;border-radius:6px;background:rgba(184,164,255,.15);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+
+/* ---------- feed / lists ---------- */
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:430px;overflow:auto}
+.feed li{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;background:var(--card-2);border:1px solid transparent}
+.feed li.unread{border-color:rgba(228,219,255,.45)}
+.feed time{font-size:12px;color:var(--brand-lavender);white-space:nowrap;margin-top:2px}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.item.overdue{border-color:rgba(255,84,112,.65);box-shadow:0 0 14px rgba(255,84,112,.2)}
+.kanban{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.kanban .col h3{display:flex;justify-content:space-between;margin-bottom:6px}
+
+/* guest cards (reception) */
+.gcard{display:flex;flex-direction:column;gap:12px}
+.gcard .head{display:flex;gap:12px;align-items:center}
+.gcard .head .who{flex:1;min-width:0}
+.gcard .head .who b{display:block;font-size:17px}
+.gcard.attn{border-color:rgba(79,195,255,.7);box-shadow:0 0 22px rgba(79,195,255,.25)}
+.info4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.info4 div{background:rgba(10,6,56,.5);border-radius:10px;padding:8px 10px;min-width:0}
+.info4 small{display:flex;gap:4px;align-items:center;color:var(--text-muted);font-size:12px}
+.info4 b{font-size:15px;overflow-wrap:anywhere}
+
+/* tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{min-height:46px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--card-2);cursor:pointer;font-weight:700}
+.tab.on{background:var(--brand-indigo);border-color:var(--glow)}
+
+/* rows table that collapses */
+.trow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.4fr) minmax(0,1.2fr);gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--card-2);border:1px solid var(--line)}
+.trow.h{background:transparent;border:none;color:var(--brand-lavender);font-size:13px;padding-block:4px}
+
+/* notifications panel */
+.panel{position:fixed;top:70px;inset-inline-end:16px;width:min(400px,calc(100vw - 32px));max-height:70vh;overflow:auto;z-index:50;
+  background:#120C6E;border:1px solid rgba(228,219,255,.4);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 30px rgba(107,59,255,.35);padding:14px;display:none}
+.panel.open{display:block}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(5,3,30,.7);display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal .box{width:min(560px,100%);max-height:90vh;overflow:auto;background:#120C6E;border:1px solid rgba(228,219,255,.4);border-radius:18px;padding:20px;box-shadow:0 0 40px rgba(107,59,255,.45)}
+
+/* toasts */
+#toasts{position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:70;display:flex;flex-direction:column;gap:8px;width:min(460px,calc(100vw - 32px));pointer-events:none}
+.toast{padding:12px 16px;border-radius:12px;background:#1B1499;border:1px solid var(--glow);box-shadow:0 0 22px rgba(107,59,255,.5);font-weight:500;animation:tin .25s ease}
+.toast.err{border-color:var(--danger);background:#3a0c33}
+.toast.info{border-color:var(--warn)}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+
+.empty{padding:22px;text-align:center;color:var(--text-muted);border:1px dashed var(--line);border-radius:12px}
+.reportbox{min-height:420px;font-size:15px;line-height:1.9;white-space:pre-wrap}
+.locked{border-color:rgba(61,220,151,.6)!important;background:rgba(61,220,151,.06)!important}
+.foot-note{margin-top:22px;font-size:12px;color:var(--text-muted);text-align:center}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .board{grid-template-columns:repeat(2,minmax(0,1fr))} .g4{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .rail{display:none}
+  main{padding-block:14px 100px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .bottomnav{display:flex;position:fixed;bottom:0;inset-inline:0;z-index:40;background:rgba(10,6,56,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+  .bottomnav .navbtn{flex:1;flex-direction:column;gap:2px;min-height:58px;padding:4px 2px;font-size:11px;justify-content:center;text-align:center}
+  .bottomnav .navbtn.on{background:var(--brand-indigo)}
+  .switcher{order:3;flex-basis:100%;justify-content:stretch}
+  .switcher label{display:none}
+  .switcher .sel{flex:1;min-height:44px;font-size:14px}
+  .g2,.g3,.kanban{grid-template-columns:minmax(0,1fr)}
+  .pagehead{padding:18px}
+  .pagehead h1{font-size:22px}
+  .pagehead::before{width:55%}
+  .trow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .trow.h{display:none}
+  .brand span{max-width:52vw}
+}
+@media (max-width:520px){ .board,.g4{grid-template-columns:minmax(0,1fr)} .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .kpi .n{font-size:24px} .bigpair .btn{min-height:68px;font-size:18px}}
+</style>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#B8A4FF"/></linearGradient></defs>
+      <path d="M24 3 42 13.5v21L24 45 6 34.5v-21z" fill="none" stroke="url(#lg)" stroke-width="3"/>
+      <path d="M24 14 33 19v10l-9 5-9-5V19z" fill="#6B3BFF" stroke="#fff" stroke-width="1.5"/>
+    </svg>
+    <div><b>EventOps AI</b><span>غرفة العمليات الذكية · هاكاثون الابتكار الصحي السابع</span></div>
+  </div>
+  <div class="switcher">
+    <label for="roleSel">الدور</label>
+    <select id="roleSel" class="sel" data-change="role" aria-label="الدور"></select>
+    <label for="personSel">المستخدم</label>
+    <select id="personSel" class="sel" data-change="person" aria-label="المستخدم"></select>
+  </div>
+  <div class="top-actions">
+    <span class="demo-tag" style="align-self:center">تجريبي</span>
+    <button class="iconbtn" data-act="bell" aria-label="الإشعارات" id="bellBtn"></button>
+    <button class="iconbtn" data-act="ideas" aria-label="أفكار للاحقًا" title="أفكار للاحقًا"></button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="rail" id="rail" aria-label="التنقل"></nav>
+  <main id="view"></main>
+</div>
+<nav class="bottomnav" id="bottomnav" aria-label="التنقل"></nav>
+
+<div class="panel" id="notifPanel" role="dialog" aria-label="الإشعارات"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="box" id="modalBox"></div></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   EventOps AI — prototype. All data is fictional and lives in memory:
+   reopening or refreshing the page restores the original demo data.
+   ===================================================================== */
+
+// ---------- icons ----------
+const IC = {
+  gauge:'<path d="M12 14l4-4"/><path d="M3.3 19a10 10 0 1 1 17.4 0"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14a6.5 6.5 0 0 1 3.5 6"/>',
+  life:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M5.6 5.6l3.6 3.6M14.8 14.8l3.6 3.6M18.4 5.6l-3.6 3.6M9.2 14.8l-3.6 3.6"/>',
+  list:'<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',
+  file:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+  bell:'<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  bulb:'<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>',
+  pin:'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  car:'<path d="M3 17h18v-4l-2-6H5l-2 6z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  check:'<path d="M5 12l5 5 9-10"/>',
+  alert:'<path d="M12 3l10 18H2z"/><path d="M12 10v4M12 18h.01"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  walk:'<circle cx="13" cy="4" r="2"/><path d="M10 21l2-6 3 3v3"/><path d="M7 12l3-4 4 2 3 3"/>',
+  door:'<path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17M3 21h18"/><path d="M15 12h.01"/>',
+  copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
+  swap:'<path d="M7 7h13l-4-4M17 17H4l4 4"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  hand:'<path d="M12 21c-4 0-7-3-7-7V9a1.5 1.5 0 0 1 3 0v3V5a1.5 1.5 0 0 1 3 0v6V4a1.5 1.5 0 0 1 3 0v7V6a1.5 1.5 0 0 1 3 0v8c0 4-3 7-8 7z"/>'
+};
+const ic = (n, cls='i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]||''}</svg>`;
+
+// ---------- reference data ----------
+const TRACKS = {
+  investors:   {name:'مسار المستثمرين', short:'المستثمرون', gate:'G1', dest:'معرض رواد الأعمال – الدور الثاني'},
+  intl_judges: {name:'مسار المحكمين الدوليين', short:'المحكمون الدوليون', gate:'G2', dest:'المسرح الرئيسي'},
+  mentors:     {name:'مسار المرشدين', short:'المرشدون', gate:'G3', dest:'قاعات الهاكاثون A1 وA2'},
+  expo_judges: {name:'مسار محكمي معرض الابتكار', short:'محكمو المعرض', gate:'G4', dest:'معرض رواد الأعمال – الدور الثاني'}
+};
+const TRACK_IDS = Object.keys(TRACKS);
+const GATES = {
+  G1:{name:'البوابة 1', loc:'المدخل الرئيسي لمبنى الدراسات العليا'},
+  G2:{name:'البوابة 2', loc:'مدخل البرج'},
+  G3:{name:'البوابة 3', loc:'الممر الخارجي'},
+  G4:{name:'البوابة 4', loc:'مدخل الدور الثاني'}
+};
+const COMMITTEES = {registration:'التسجيل', parking:'المواقف', transport:'النقل', hospitality:'الضيافة', security_safety:'الأمن والسلامة'};
+const PRIORITIES = {urgent:'عاجلة', medium:'متوسطة', normal:'عادية'};
+const STATUS = {
+  scheduled:{label:'لم يصل', icon:'clock'},
+  near:{label:'قريب', icon:'walk'},
+  arrived:{label:'وصل', icon:'pin'},
+  received:{label:'تم الاستقبال', icon:'hand'},
+  escorted:{label:'تمت المرافقة', icon:'target'}
+};
+const ORDER = ['scheduled','near','arrived','received','escorted'];
+const ROLES = {guest:'الضيف', receptionist:'عضو الاستقبال', gate_officer:'مسؤول البوابة', track_leader:'قائد المسار', committee_rep:'ممثل اللجنة المساندة', leadership:'قيادة البروتوكول'};
+const TASK_ST = {new:'جديدة', in_progress:'قيد التنفيذ', done:'مكتملة'};
+const REQ_ST = {new:'جديد', in_progress:'قيد التنفيذ', done:'مكتمل'};
+const SHIFTS = {};
+[1,2,3].forEach(d=>{ SHIFTS[`D${d}-AM`]=`اليوم ${d} · صباحية 08:00–14:00`; SHIFTS[`D${d}-PM`]=`اليوم ${d} · مسائية 14:00–20:00`; });
+const LOCATIONS = [...Object.values(GATES).map(g=>g.loc),'منطقة التسجيل','منطقة الضيافة','المسرح الرئيسي','قاعات الهاكاثون A1 وA2','معرض رواد الأعمال – الدور الثاني','مواقف الضيوف'];
+const ESCALATE_MS = 3*60*1000;
+const PAGES = [
+  {id:'dashboard', label:'لوحة القيادة', icon:'gauge', roles:['gate_officer','track_leader','leadership']},
+  {id:'guest', label:'بوابة الضيف', icon:'user', roles:['guest']},
+  {id:'reception', label:'الاستقبال', icon:'users', roles:['receptionist']},
+  {id:'support', label:'طلبات المساعدة', icon:'life', roles:['receptionist','gate_officer','track_leader','committee_rep','leadership']},
+  {id:'tasks', label:'توزيع المهام', icon:'list', roles:['receptionist','gate_officer','track_leader','committee_rep','leadership']},
+  {id:'reports', label:'التقارير', icon:'file', roles:['leadership']}
+];
+const HOME = {guest:'guest', receptionist:'reception', gate_officer:'dashboard', track_leader:'dashboard', committee_rep:'support', leadership:'dashboard'};
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tFmt = new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Riyadh',hour:'2-digit',minute:'2-digit',hour12:false});
+const dFmt = new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{timeZone:'Asia/Riyadh',weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const hFmt = new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Riyadh',hour:'numeric',hour12:false});
+const fmtT = ts => ts ? tFmt.format(ts) : '—';
+const ago = ts => { const d = Math.floor((Date.now()-ts)/60000); return d < 1 ? 'الآن' : d < 60 ? `قبل ${d} د` : `قبل ${Math.floor(d/60)} س`; };
+const initials = n => n.replace(/^(د\.|م\.|أ\.)\s*/,'').split(' ').slice(0,2).map(w=>w.replace(/^ال/,'')[0]).join(' ');
+const uid = () => Math.random().toString(36).slice(2,10);
+const avg = a => a.length ? Math.round(a.reduce((x,y)=>x+y,0)/a.length*10)/10 : null;
+const currentShift = () => +hFmt.format(Date.now()) < 14 ? 'D1-AM' : 'D1-PM';
+
+// ---------- state ----------
+let S;
+
+function seed(){
+  const now = Date.now(), M = 60000;
+  S = {guests:[], staff:[], tasks:[], requests:[], notifs:[], events:[], reports:[], reqSeq:0, taskSeq:0,
+       actor:null, page:'guest', ctxGuest:null, form:{}, tasksTab:'assign', teamFilter:'all', assignFilter:'all',
+       repTrack:'all', repPeriod:'day', draftId:null, deferRender:false};
+
+  // --- staff (42) ---
+  let n = 0;
+  const first = ['عبدالله','فهد','خالد','سلطان','تركي','ناصر','فيصل','سعود','بندر','ماجد','يوسف','عمر','راكان','نواف','مشاري','طلال','زياد','هشام','نورة','سارة','هند','ريم','لمى','جود','العنود','دانة','شهد','أمل','منيرة','لينا','رزان','غادة'];
+  const fam = ['الحربي','العتيبي','الشمري','الدوسري','الزهراني','الغامدي','المطيري','السبيعي','العنزي','الشهري','المالكي','الرشيد','السالم','الخالدي','البقمي','العمري','الجهني','القرني'];
+  const nm = i => `${first[i % first.length]} ${fam[(i*5 + Math.floor(i/first.length)*7) % fam.length]}`;
+  const phone = i => `05${(10+i*37)%90+10} ${String(100+(i*113)%900)} ${String(1000+(i*791)%9000)}`;
+  const add = (name, role, extra={}) => { n++; const id = 'STF-'+String(n).padStart(2,'0');
+    S.staff.push({id, name, role, track:null, gate:null, zone:null, committee:null, shift:'D1-AM', manager:null, phone:phone(n), ...extra}); return id; };
+  let k = 0;
+  const lead = add('أ. '+nm(k++), 'leadership', {zone:'غرفة العمليات', title:'قائد لجنة البروتوكول'});
+  add('أ. '+nm(k++), 'leadership', {zone:'غرفة العمليات', title:'نائب قائد لجنة البروتوكول', manager:lead});
+  const sizes = {investors:7, intl_judges:5, mentors:13, expo_judges:6};
+  const leaders = {}, recs = {};
+  TRACK_IDS.forEach(t => {
+    leaders[t] = add(nm(k++), 'track_leader', {track:t, zone:GATES[TRACKS[t].gate].loc, manager:lead, title:'قائد '+TRACKS[t].name});
+    recs[t] = [];
+    for (let i=1;i<sizes[t];i++) recs[t].push(add(nm(k++), 'receptionist', {track:t, zone:GATES[TRACKS[t].gate].loc, gate:TRACKS[t].gate, manager:leaders[t], shift: i%3===0 ? 'D1-PM':'D1-AM'}));
+  });
+  Object.keys(GATES).forEach(g => add(nm(k++), 'gate_officer', {gate:g, zone:GATES[g].loc, manager:lead}));
+  Object.keys(COMMITTEES).forEach(c => add(nm(k++), 'committee_rep', {committee:c, zone:'لجنة '+COMMITTEES[c], manager:'STF-02'}));
+
+  // --- guests (40) ---
+  const gNames = {
+    investors:['أ. وليد الفارس','أ. منى الراشد','أ. سامي الحمد','أ. هالة العبدالله','أ. رائد المنصور','أ. ديما الصالح','أ. ثامر الفهد','أ. ليلى الناصر','أ. عادل الراجح','أ. سلمى الماجد'],
+    intl_judges:['د. إيلينا روسي','د. جيمس كارتر','د. ماريا غونزاليس','د. هيروشي تاناكا','د. أنّا شميدت','د. ديفيد ميلر','د. صوفي لوران','د. راجيف ميهتا','د. لارس نيلسن','د. كلارا مورو'],
+    mentors:['د. ياسر الحازمي','م. أروى الشريف','د. حسام الدباغ','م. بشاير الحسن','د. معاذ الفيفي','م. رنا الجابر','د. أيمن البار','م. وعد الصقر','د. قصي الحمدان','م. جمانة العلي'],
+    expo_judges:['د. سهى المهنا','د. باسل الخضير','د. نجلاء التميمي','د. مازن الفهيد','د. عهود السديس','د. أنس الربيعة','د. حنان الوهيبي','د. طارق اللحيدان','د. مها السعدون','د. نايف الحقباني']
+  };
+  const titles = {
+    investors:['شريك إداري – صندوق رأس مال جريء','مدير استثمار','مستثمر ملائكي','رئيس الاستثمار المؤسسي'],
+    intl_judges:['أستاذ المعلوماتية الصحية','خبير الأجهزة الطبية','باحث الذكاء الاصطناعي في الطب','مستشار السياسات الصحية'],
+    mentors:['مرشد – ريادة الأعمال','مرشد – تصميم المنتجات','مرشد – البيانات الصحية','مرشد – نماذج الأعمال'],
+    expo_judges:['استشاري الابتكار السريري','خبير الملكية الفكرية','أستاذ الهندسة الطبية','مستشار التحول الرقمي']
+  };
+  const expertise = {investors:'الاستثمار في التقنية الصحية', intl_judges:'التحكيم الدولي', mentors:'الإرشاد والتوجيه', expo_judges:'تقييم الابتكارات'};
+  let gi = 0;
+  TRACK_IDS.forEach(t => gNames[t].forEach((name,i) => {
+    gi++; const id = 'GST-'+String(gi).padStart(2,'0');
+    S.guests.push({id, name, title:titles[t][i%4], expertise:expertise[t], track:t, phone:phone(200+gi),
+      email:`guest${String(gi).padStart(2,'0')}@demo.local`, status:'scheduled', gate:TRACKS[t].gate, parking:null,
+      destination:TRACKS[t].dest, receptionistId:recs[t][i % recs[t].length], trackLeaderId:leaders[t], times:{}, gateHistory:[]});
+  }));
+
+  // --- seed activity (so the dashboard has something to show) ---
+  const plan = {investors:['escorted','escorted','received','arrived','near'], intl_judges:['escorted','arrived','near'], mentors:['received','near','arrived'], expo_judges:['escorted','near']};
+  const offs = {near:[70,55], arrived:[48,30], received:[44,24], escorted:[32,12]};
+  TRACK_IDS.forEach(t => plan[t].forEach((target,i) => {
+    const g = S.guests.find(x => x.track===t && S.guests.filter(y=>y.track===t).indexOf(x)===i);
+    const shift = i*4;
+    ORDER.slice(1, ORDER.indexOf(target)+1).forEach(s => {
+      const at = now - (offs[s][target==='escorted'||target==='received'?0:1] - shift)*M + (s==='near'?0:0);
+      g.status = s; g.times[s] = at;
+      if (s==='arrived' && !g.parking) g.parking = 'P-'+(10+gi--%40);
+      recordGuestEvent(g, s, s==='near'||s==='arrived' ? g.id : g.receptionistId, at, true);
+    });
+  }));
+  // a mid-journey gate change (mentors guest that is "near")
+  const mg = S.guests.find(g => g.track==='mentors' && g.status==='near');
+  if (mg) changeGate(mg, 'G1', mg.id, now - 6*M, true);
+
+  // requests
+  const rcp = S.guests.find(g=>g.track==='investors' && g.status==='arrived');
+  createRequest({committee:'parking', priority:'urgent', location:GATES.G1.loc, description:'لا يوجد موقف متاح قرب المدخل الرئيسي لضيف مسار المستثمرين.', guestId:rcp.id}, rcp.receptionistId, now - 2.4*M, true);
+  const r2 = createRequest({committee:'hospitality', priority:'medium', location:'منطقة الضيافة', description:'تجهيز ركن ضيافة لمحكمي المسار الدولي قبل الجلسة.', guestId:null}, leaders.intl_judges, now - 26*M, true);
+  setReq(r2, 'in_progress', 'STF-'+String(41).padStart(2,'0'), now - 23*M, true);
+  const r3 = createRequest({committee:'transport', priority:'normal', location:'مواقف الضيوف', description:'نقل ضيفين من المواقف البعيدة إلى مبنى الدراسات العليا.', guestId:null}, recs.mentors[0], now - 62*M, true);
+  setReq(r3, 'in_progress', 'STF-40', now - 58*M, true); setReq(r3, 'done', 'STF-40', now - 41*M, true);
+  createRequest({committee:'security_safety', priority:'urgent', location:GATES.G2.loc, description:'ازدحام عند مدخل البرج يحتاج تنظيمًا.', guestId:null}, S.staff.find(s=>s.gate==='G2'&&s.role==='gate_officer').id, now - 0.8*M, true);
+
+  // tasks
+  const T = (title, description, assigneeId, priority, dueMin, status) => {
+    S.taskSeq++; const t = {id:'TSK-'+String(S.taskSeq).padStart(3,'0'), title, description, assigneeId, priority, dueAt: now + dueMin*M, status, updatedAt: now - 20*M};
+    S.tasks.push(t); logEvent('TASK_CREATED', lead, t.id, `أُسندت مهمة «${title}» إلى ${who(assigneeId)}`, now - 90*M, {track:staff(assigneeId).track, gate:staff(assigneeId).gate});
+  };
+  T('تجهيز ستاند الإرشاد عند المدخل الرئيسي','وضع البوكس الإرشادي ولوحة المسارات عند بداية الممر.', S.staff.find(s=>s.role==='gate_officer'&&s.gate==='G1').id, 'urgent', -15, 'in_progress');
+  T('مراجعة قائمة ضيوف المسار الدولي','التأكد من بيانات الوصول للمحكمين العشرة.', leaders.intl_judges, 'medium', 40, 'new');
+  T('تنسيق مرافقة المرشدين إلى A1 وA2','توزيع أعضاء الاستقبال على مداخل القاعات.', leaders.mentors, 'medium', 90, 'in_progress');
+  T('استلام بطاقات الضيوف من التسجيل','', recs.investors[0], 'normal', 25, 'done');
+  T('تجهيز مسار المعرض في الدور الثاني','التأكد من وضوح الإرشاد عند الدرج الكهربائي.', recs.expo_judges[0], 'normal', 60, 'new');
+  T('متابعة ركن الضيافة','', S.staff.find(s=>s.committee==='hospitality').id, 'normal', 120, 'new');
+  T('فحص لوحة الإرشاد في الممر الخارجي','', S.staff.find(s=>s.role==='gate_officer'&&s.gate==='G3').id, 'medium', -5, 'new');
+  T('إحاطة فريق الاستقبال الصباحي','', recs.mentors[1], 'normal', 15, 'done');
+
+  S.events.sort((a,b)=>a.at-b.at);
+  S.notifs.forEach(x => x.read = true);
+
+  const firstWaiting = S.guests.find(g => g.status==='scheduled' && g.track==='investors');
+  S.ctxGuest = firstWaiting.id;
+  S.actor = {role:'guest', id:firstWaiting.id};
+  S.page = 'guest';
+  checkEscalations(true);
+}
+
+// ---------- lookups ----------
+const guest = id => S.guests.find(g => g.id===id);
+const staff = id => S.staff.find(s => s.id===id);
+const who = id => (guest(id) || staff(id) || {name:'—'}).name;
+const gateOfficer = gate => S.staff.find(s => s.role==='gate_officer' && s.gate===gate);
+const trackLeader = t => S.staff.find(s => s.role==='track_leader' && s.track===t);
+const repOf = c => S.staff.find(s => s.role==='committee_rep' && s.committee===c);
+const me = () => S.actor.role==='guest' ? guest(S.actor.id) : staff(S.actor.id);
+const trackOfGate = gate => TRACK_IDS.find(t => TRACKS[t].gate===gate);
+
+// ---------- event log & notifications ----------
+function logEvent(type, actorId, entityId, text, at=Date.now(), meta={}){
+  const e = {id:uid(), type, at, actorId, entityId, text, ...meta};
+  S.events.push(e); return e;
+}
+function notify(ids, text, at=Date.now()){
+  [...new Set(ids.filter(Boolean))].forEach(r => S.notifs.push({id:uid(), recipientId:r, text, at, read:false}));
+}
+
+// ---------- permissions ----------
+function can(action, ent){
+  const a = S.actor, r = a.role;
+  switch(action){
+    case 'guest.self': return r==='guest' && ent.id===a.id;
+    case 'guest.receive': return r==='receptionist' && ent.receptionistId===a.id;
+    case 'request.create': return r!=='committee_rep' || true;
+    case 'request.update': return r==='leadership' || (r==='committee_rep' && staff(a.id).committee===ent.committee);
+    case 'task.edit': return r==='leadership';
+    case 'task.status': return r==='leadership' || ent.assigneeId===a.id;
+    case 'report': return r==='leadership';
+  }
+  return false;
+}
+function deny(){ toast('هذا الإجراء غير متاح لدورك الحالي.', 'err'); }
+
+// ---------- business rules ----------
+const STATUS_TEXT = {near:'اقترب', arrived:'وصل', received:'تم استقباله', escorted:'تمت مرافقته إلى وجهته'};
+function recordGuestEvent(g, s, actorId, at, silent){
+  const type = {near:'GUEST_NEAR', arrived:'GUEST_ARRIVED', received:'GUEST_RECEIVED', escorted:'GUEST_ESCORTED'}[s];
+  const extra = (s==='near'||s==='arrived') ? ` · ${GATES[g.gate].name}${g.parking? ' · موقف '+g.parking:''}` : '';
+  const text = `${g.name} ${STATUS_TEXT[s]}${extra}`;
+  logEvent(type, actorId, g.id, text, at, {track:g.track, gate:g.gate});
+  if (s==='near' || s==='arrived') notify([g.receptionistId, gateOfficer(g.gate).id, g.trackLeaderId], text, at);
+  else notify([g.trackLeaderId], text, at);
+}
+
+function guestTo(g, to){
+  const self = to==='near' || to==='arrived';
+  if (!(self ? can('guest.self', g) : can('guest.receive', g))) return deny();
+  const from = ORDER.indexOf(g.status), target = ORDER.indexOf(to);
+  if (target <= from) return toast('تم تسجيل هذه الحالة مسبقًا، لم يُنشأ سجل مكرر.', 'info');
+  const allowed = {near:['scheduled'], arrived:['scheduled','near'], received:['arrived'], escorted:['received']}[to];
+  if (!allowed.includes(g.status)) return toast('لا يمكن الانتقال إلى هذه الحالة الآن.', 'err');
+  g.status = to; g.times[to] = Date.now();
+  recordGuestEvent(g, to, S.actor.id, Date.now());
+  toast({near:'تم إبلاغ فريق الاستقبال باقترابك.', arrived:'تم إبلاغ المستقبل ومسؤول البوابة وقائد المسار بوصولك.', received:'تم تأكيد الاستقبال.', escorted:'تمت المرافقة بنجاح، اكتملت رحلة الضيف.'}[to]);
+  render();
+}
+
+function changeGate(g, to, actorId, at=Date.now(), silent=false){
+  if (g.gate===to) return;
+  const from = g.gate; g.gate = to;
+  g.gateHistory.push({from, to, at, by:actorId});
+  const text = `${g.name} غيّر البوابة من ${GATES[from].name} إلى ${GATES[to].name}`;
+  logEvent('GATE_CHANGED', actorId, g.id, text, at, {track:g.track, gate:to, fromGate:from});
+  const statusTxt = ['near','arrived'].includes(g.status) ? ` — الحالة الآن: ${STATUS[g.status].label}` : '';
+  notify([gateOfficer(to).id], `${g.name} متجه الآن إلى بوابتك (${GATES[to].name})${statusTxt}`, at);
+  notify([gateOfficer(from).id], `${g.name} انتقل إلى ${GATES[to].name}`, at);
+  notify([g.receptionistId, g.trackLeaderId], text, at);
+  if (!silent) toast(`تم تحديث البوابة، والمسؤول الآن: ${gateOfficer(to).name}`);
+}
+
+function requestTrack(req){
+  if (req.guestId) return guest(req.guestId).track;
+  const rq = guest(req.requesterId) || staff(req.requesterId);
+  if (rq.track) return rq.track;
+  if (rq.role==='gate_officer') return trackOfGate(rq.gate);
+  return null;
+}
+function createRequest(f, requesterId, at=Date.now(), silent=false){
+  S.reqSeq++;
+  const req = {id:'REQ-'+String(S.reqSeq).padStart(4,'0'), committee:f.committee, priority:f.priority, location:f.location,
+    description:f.description, requesterId, guestId:f.guestId||null, status:'new', createdAt:at, receivedAt:null, closedAt:null, overdue:false, escalatedTo:null};
+  req.track = requestTrack(req);
+  S.requests.push(req);
+  const text = `طلب ${req.id} (${COMMITTEES[req.committee]} · ${PRIORITIES[req.priority]}) من ${who(requesterId)}`;
+  logEvent('REQUEST_CREATED', requesterId, req.id, text, at, {track:req.track, gate:req.guestId ? guest(req.guestId).gate : null});
+  const rec = guest(requesterId) ? guest(requesterId).receptionistId : null;
+  notify([repOf(req.committee).id, rec], `طلب جديد ${req.id}: ${req.description}`, at);
+  if (!silent) toast(`تم إرسال الطلب ${req.id} إلى ممثل لجنة ${COMMITTEES[req.committee]}.`);
+  return req;
+}
+function setReq(req, to, actorId, at=Date.now(), silent=false){
+  if (!silent && !can('request.update', req)) return deny();
+  if ((to==='in_progress' && req.status!=='new') || (to==='done' && req.status!=='in_progress')) return toast('تم تحديث هذا الطلب مسبقًا.', 'info');
+  req.status = to;
+  if (to==='in_progress') req.receivedAt = at; else req.closedAt = at;
+  const text = to==='in_progress' ? `استُلم الطلب ${req.id} من لجنة ${COMMITTEES[req.committee]}` : `أُغلق الطلب ${req.id}`;
+  logEvent(to==='in_progress' ? 'REQUEST_RECEIVED' : 'REQUEST_CLOSED', actorId, req.id, text, at, {track:req.track});
+  notify([req.requesterId], text, at);
+  if (!silent){ toast(text); render(); }
+}
+function checkEscalations(silent){
+  let changed = false;
+  S.requests.forEach(req => {
+    if (req.status==='new' && !req.escalatedTo && !req.overdue && Date.now() - req.createdAt >= ESCALATE_MS){
+      const tl = req.track ? trackLeader(req.track) : null;
+      req.overdue = true; req.escalatedTo = tl ? tl.id : null;
+      const text = `تصعيد: الطلب ${req.id} لم يُستلم خلال 3 دقائق${tl ? ' — أُحيل إلى '+tl.name : ''}`;
+      logEvent('REQUEST_ESCALATED', 'system', req.id, text, Date.now(), {track:req.track});
+      notify([tl && tl.id], text);
+      changed = true;
+      if (!silent) toast(text, 'err');
+    }
+  });
+  return changed;
+}
+
+// ---------- scopes ----------
+function scopeGuests(){
+  const a = S.actor, m = me();
+  if (a.role==='leadership') return S.guests;
+  if (a.role==='track_leader') return S.guests.filter(g => g.track===m.track);
+  if (a.role==='gate_officer') return S.guests.filter(g => g.gate===m.gate);
+  if (a.role==='receptionist') return S.guests.filter(g => g.receptionistId===m.id);
+  if (a.role==='guest') return [m];
+  return [];
+}
+function scopeRequests(){
+  const a = S.actor, m = me();
+  if (a.role==='leadership') return S.requests;
+  if (a.role==='committee_rep') return S.requests.filter(r => r.committee===m.committee);
+  if (a.role==='track_leader') return S.requests.filter(r => r.track===m.track);
+  if (a.role==='gate_officer') return S.requests.filter(r => r.requesterId===m.id || (r.guestId && guest(r.guestId).gate===m.gate));
+  return S.requests.filter(r => r.requesterId===m.id);
+}
+function scopeTasks(){
+  const a = S.actor, m = me();
+  if (a.role==='leadership') return S.tasks;
+  if (a.role==='track_leader') return S.tasks.filter(t => t.assigneeId===m.id || staff(t.assigneeId).track===m.track);
+  return S.tasks.filter(t => t.assigneeId===m.id);
+}
+function scopeEvents(){
+  const a = S.actor, m = me();
+  if (a.role==='leadership') return S.events;
+  if (a.role==='track_leader') return S.events.filter(e => e.track===m.track);
+  if (a.role==='gate_officer') return S.events.filter(e => e.gate===m.gate || e.fromGate===m.gate);
+  return [];
+}
+const taskOverdue = t => t.status!=='done' && Date.now() > t.dueAt;
+
+// ---------- UI atoms ----------
+const stChip = s => `<span class="st st-${s}">${ic(STATUS[s].icon)}${STATUS[s].label}</span>`;
+const prChip = p => `<span class="st pr-${p}">${PRIORITIES[p]}</span>`;
+const hex = (name, cls='') => `<div class="hex ${cls}" aria-hidden="true">${esc(initials(name))}</div>`;
+const head = (eyebrow, title, sub='', side='') => `<section class="pagehead"><div><p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${sub?`<p class="muted">${sub}</p>`:''}</div>${side}</section>`;
+const empty = t => `<div class="empty">${t}</div>`;
+const opt = (v, l, sel) => `<option value="${esc(v)}" ${sel?'selected':''}>${esc(l)}</option>`;
+function chips(group, map, current){
+  return `<div class="chips" role="radiogroup">${Object.entries(map).map(([v,l]) =>
+    `<button type="button" class="chip ${current===v?'on':''}" data-act="pick" data-group="${group}" data-val="${v}" role="radio" aria-checked="${current===v}">${esc(l)}</button>`).join('')}</div>`;
+}
+function toast(msg, kind=''){
+  const t = document.createElement('div'); t.className = 'toast '+kind; t.textContent = msg;
+  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3600);
+}
+function reqCard(r, actions=true){
+  const canUpd = actions && can('request.update', r);
+  return `<article class="item ${r.overdue && r.status==='new' ? 'overdue':''}">
+    <div class="spread"><b>${r.id}</b><div class="row">${prChip(r.priority)}<span class="st st-plain">${COMMITTEES[r.committee]}</span>
+    ${r.overdue ? `<span class="st st-danger">${ic('alert')}متأخر${r.escalatedTo?' · صُعّد':''}</span>`:''}</div></div>
+    <p style="margin:8px 0">${esc(r.description)}</p>
+    <div class="small muted">${ic('pin')} ${esc(r.location)} · مقدم الطلب: ${esc(who(r.requesterId))}${r.guestId?' · الضيف: '+esc(guest(r.guestId).name):''}</div>
+    <div class="small muted" style="margin-top:4px">أُنشئ ${fmtT(r.createdAt)} · استُلم ${fmtT(r.receivedAt)} · أُغلق ${fmtT(r.closedAt)}${r.escalatedTo?' · صُعّد إلى '+esc(who(r.escalatedTo)):''}</div>
+    ${canUpd && r.status!=='done' ? `<div class="row mt">${r.status==='new'
+      ? `<button class="btn btn-primary btn-sm" data-act="req" data-id="${r.id}" data-to="in_progress">${ic('hand')}استلام الطلب</button>`
+      : `<button class="btn btn-ok btn-sm" data-act="req" data-id="${r.id}" data-to="done">${ic('check')}إغلاق الطلب</button>`}</div>`:''}
+  </article>`;
+}
+function reqForm(prefix, guests, presetGuest){
+  const f = S.form;
+  if (!f[prefix+'-priority']) f[prefix+'-priority'] = 'medium';
+  const pg = presetGuest ? guest(presetGuest) : null;
+  return `<div class="stack">
+    <div class="field"><span>نوع الطلب (اللجنة المختصة)</span>${chips(prefix+'-committee', COMMITTEES, f[prefix+'-committee'])}</div>
+    <div class="field"><span>الأولوية</span>${chips(prefix+'-priority', PRIORITIES, f[prefix+'-priority'])}</div>
+    <label class="field"><span>الموقع</span><select class="inp" id="${prefix}-loc">${LOCATIONS.map(l=>opt(l,l, pg && GATES[pg.gate].loc===l)).join('')}</select></label>
+    ${guests ? `<label class="field"><span>الضيف المرتبط (اختياري)</span><select class="inp" id="${prefix}-guest">${opt('','بدون')}${guests.map(g=>opt(g.id, g.name+' · '+TRACKS[g.track].short, g.id===presetGuest)).join('')}</select></label>`:''}
+    <label class="field"><span>وصف المشكلة</span><textarea class="inp" id="${prefix}-desc" placeholder="اكتب باختصار ما المطلوب"></textarea></label>
+    <button class="btn btn-primary btn-block" data-act="req-submit" data-prefix="${prefix}">${ic('send')}إرسال الطلب</button>
+  </div>`;
+}
+function submitReq(prefix){
+  const f = S.form, committee = f[prefix+'-committee'], description = $('#'+prefix+'-desc').value.trim();
+  if (!committee) return toast('اختر نوع الطلب أولًا.', 'err');
+  if (!description) return toast('اكتب وصفًا مختصرًا للطلب.', 'err');
+  const isGuest = S.actor.role==='guest';
+  const guestId = isGuest ? null : ($('#'+prefix+'-guest') ? $('#'+prefix+'-guest').value : null);
+  createRequest({committee, priority:f[prefix+'-priority'], location:$('#'+prefix+'-loc').value, description, guestId}, S.actor.id);
+  delete f[prefix+'-committee']; delete f[prefix+'-priority'];
+  closeModal(); render();
+}
+
+// ---------- pages ----------
+function viewGuest(){
+  const g = me(), t = TRACKS[g.track], rec = staff(g.receptionistId);
+  const idx = ORDER.indexOf(g.status);
+  const myReqs = S.requests.filter(r => r.requesterId===g.id).slice().reverse();
+  return head('بوابة الضيف', `أهلًا بك، ${esc(g.name)}`, `${esc(g.title)} · ${t.name}`, hex(g.name,'lg')) +
+  `<div class="grid g2">
+    <section class="card glow">
+      <h2>${ic('pin')}حالة وصولك</h2>
+      <div class="row" style="margin-bottom:12px">الحالة الحالية: ${stChip(g.status)}</div>
+      <div class="bigpair">
+        <button class="btn btn-warn" data-act="gstatus" data-gid="${g.id}" data-to="near" ${g.status!=='scheduled'?'disabled':''}>${ic('walk')}أنا قريب</button>
+        <button class="btn btn-primary" data-act="gstatus" data-gid="${g.id}" data-to="arrived" ${idx>=2?'disabled':''}>${ic('pin')}وصلت</button>
+      </div>
+      <div class="timeline mt" aria-label="مراحل الرحلة">${ORDER.map((s,i)=>`<div class="tl ${i<idx?'done':''} ${i===idx?'cur':''}"><div class="dot">${ic(STATUS[s].icon)}</div>${STATUS[s].label}<br><span class="small">${fmtT(g.times[s])}</span></div>`).join('')}</div>
+      <p class="small muted" style="margin-top:12px">عند الضغط يصل إشعار تلقائي إلى المستقبل المكلف ومسؤول البوابة وقائد المسار.</p>
+    </section>
+    <section class="card">
+      <h2>${ic('target')}تفاصيل زيارتك</h2>
+      <dl class="kv">
+        <dt>${ic('list')}المسار</dt><dd>${t.name}</dd>
+        <dt>${ic('target')}الوجهة</dt><dd>${esc(g.destination)}</dd>
+        <dt>${ic('users')}المستقبل المكلف</dt><dd>${esc(rec.name)}</dd>
+        <dt>${ic('door')}البوابة</dt><dd>${GATES[g.gate].name} — ${GATES[g.gate].loc}</dd>
+        <dt>${ic('car')}الموقف</dt><dd>${g.parking ? esc(g.parking) : '<span class="muted">لم يُحدد بعد</span>'}</dd>
+      </dl>
+    </section>
+    <section class="card">
+      <h2>${ic('door')}البوابة والموقف</h2>
+      <div class="gates">${Object.entries(GATES).map(([id,x])=>`<button class="gate ${g.gate===id?'on':''}" data-act="gate" data-gate="${id}" aria-pressed="${g.gate===id}"><b>${x.name}</b><small>${x.loc}</small></button>`).join('')}</div>
+      <label class="field mt"><span>رقم الموقف</span>
+        <div class="row" style="flex-wrap:nowrap"><input class="inp" id="parkInp" placeholder="مثال: P-12" value="${esc(g.parking||'')}" maxlength="12" autocomplete="off">
+        <button class="btn btn-primary" data-act="parking">حفظ</button></div></label>
+    </section>
+    <section class="card">
+      <h2>${ic('life')}طلب مساعدة</h2>
+      ${reqForm('g', null, g.id)}
+      <h3 class="mt" style="font-size:15px;margin-bottom:8px">طلباتي</h3>
+      <div class="list">${myReqs.length ? myReqs.map(r=>`<div class="item"><div class="spread"><b>${r.id} · ${COMMITTEES[r.committee]}</b><span class="st ${r.status==='done'?'st-escorted':r.status==='in_progress'?'st-arrived':'st-near'}">${REQ_ST[r.status]}</span></div><div class="small muted">${esc(r.description)} · ${fmtT(r.createdAt)}</div></div>`).join('') : empty('لا توجد طلبات بعد.')}</div>
+    </section>
+  </div>`;
+}
+
+function viewReception(){
+  const m = me(), mine = scopeGuests();
+  const rank = {arrived:0, received:1, near:2, scheduled:3, escorted:4};
+  const list = mine.slice().sort((a,b)=>rank[a.status]-rank[b.status]);
+  const cnt = s => mine.filter(g=>g.status===s).length;
+  const unread = S.notifs.filter(x=>x.recipientId===m.id && !x.read).slice(-3).reverse();
+  return head('فريق الاستقبال', esc(m.name), `${TRACKS[m.track].name} · ${GATES[m.gate].loc} · ${SHIFTS[m.shift]}`,
+      `<div class="row">${['near','arrived','received'].map(s=>`<span class="st st-${s}">${STATUS[s].label}: ${cnt(s)}</span>`).join('')}</div>`) +
+  (unread.length ? `<section class="card glow" style="margin-bottom:16px"><h2>${ic('bell')}تنبيهات جديدة</h2><ul class="feed">${unread.map(x=>`<li class="unread"><time>${fmtT(x.at)}</time><span>${esc(x.text)}</span></li>`).join('')}</ul>
+    <button class="btn btn-ghost btn-sm mt" data-act="mark-read">تحديد الكل كمقروء</button></section>` : '') +
+  `<div class="grid g2">${list.map(g => {
+    const action = g.status==='arrived' ? `<button class="btn btn-primary btn-block" data-act="gstatus" data-gid="${g.id}" data-to="received">${ic('hand')}تأكيد الاستقبال</button>`
+      : g.status==='received' ? `<button class="btn btn-ok btn-block" data-act="gstatus" data-gid="${g.id}" data-to="escorted">${ic('target')}تأكيد المرافقة إلى الوجهة</button>`
+      : g.status==='escorted' ? `<button class="btn btn-block" disabled>${ic('check')}اكتملت الرحلة</button>`
+      : `<button class="btn btn-block" disabled>${ic('clock')}${g.status==='near'?'الضيف قريب — بانتظار الوصول':'لم يصل بعد'}</button>`;
+    return `<article class="card gcard ${g.status==='arrived'?'attn':''}">
+      <div class="head">${hex(g.name)}<div class="who"><b>${esc(g.name)}</b><span class="small muted">${esc(g.title)}</span></div>${stChip(g.status)}</div>
+      <div class="info4">
+        <div><small>${ic('door')}البوابة</small><b>${GATES[g.gate].name}</b><div class="small muted">${GATES[g.gate].loc}</div></div>
+        <div><small>${ic('car')}الموقف</small><b>${esc(g.parking||'—')}</b></div>
+        <div><small>${ic('target')}الوجهة</small><b>${esc(g.destination)}</b></div>
+        <div><small>${ic('phone')}الجوال (تجريبي)</small><b dir="ltr">${g.phone}</b></div>
+      </div>
+      ${action}
+      <div class="bigpair" style="gap:8px">
+        <button class="btn btn-sm btn-ghost" data-act="delay-open" data-gid="${g.id}">${ic('clock')}الإبلاغ عن تأخير</button>
+        <button class="btn btn-sm btn-ghost" data-act="support-open" data-gid="${g.id}">${ic('life')}طلب دعم</button>
+      </div>
+    </article>`;}).join('')}</div>`;
+}
+
+function viewDashboard(){
+  const a = S.actor, m = me(), gs = scopeGuests(), reqs = scopeRequests(), tasks = scopeTasks();
+  const c = s => gs.filter(g=>g.status===s).length;
+  const atLeast = s => gs.filter(g=>ORDER.indexOf(g.status)>=ORDER.indexOf(s)).length;
+  const recT = avg(gs.filter(g=>g.times.received && g.times.arrived).map(g=>(g.times.received-g.times.arrived)/60000));
+  const reqT = avg(reqs.filter(r=>r.receivedAt).map(r=>(r.receivedAt-r.createdAt)/60000));
+  const openR = reqs.filter(r=>r.status!=='done').length, overR = reqs.filter(r=>r.overdue && r.status==='new').length, overT = tasks.filter(taskOverdue).length;
+  const scopeName = a.role==='leadership' ? 'جميع المسارات الأربعة' : a.role==='track_leader' ? TRACKS[m.track].name : `${GATES[m.gate].name} — ${GATES[m.gate].loc}`;
+  const kpi = (n,l,icn,alert) => `<div class="kpi ${alert && n>0?'alert':''}"><div class="hex">${ic(icn)}</div><div><div class="n">${n ?? '—'}</div><div class="l">${l}</div></div></div>`;
+  const tracks = a.role==='track_leader' ? [m.track] : TRACK_IDS.filter(t => gs.some(g=>g.track===t));
+  const feed = scopeEvents().slice(-20).reverse();
+  const shiftNow = currentShift();
+
+  let gatePanel = '';
+  if (a.role==='gate_officer'){
+    const incoming = gs.filter(g=>['near','arrived'].includes(g.status));
+    gatePanel = `<section class="card glow" style="margin-bottom:16px"><h2>${ic('door')}قادمون إلى بوابتك الآن</h2>
+      ${incoming.length ? `<div class="list">${incoming.map(g=>`<div class="item spread"><div class="row">${hex(g.name,'sm')}<div><b>${esc(g.name)}</b><div class="small muted">${TRACKS[g.track].short} · موقف ${esc(g.parking||'—')} · المستقبل: ${esc(staff(g.receptionistId).name)}</div></div></div>${stChip(g.status)}</div>`).join('')}</div>` : empty('لا يوجد ضيوف متجهون إلى بوابتك حاليًا.')}</section>`;
+  }
+
+  const readiness = (a.role==='gate_officer') ? '' : `<section class="card"><h2>${ic('users')}جاهزية فرق الاستقبال</h2><div class="list">${tracks.map(t=>{
+      const rs = S.staff.filter(s=>s.role==='receptionist' && s.track===t);
+      const on = rs.filter(s=>s.shift===shiftNow).length;
+      const busy = rs.filter(s=>S.guests.some(g=>g.receptionistId===s.id && g.status==='received')).length;
+      return `<div class="item"><div class="spread"><b>${TRACKS[t].name}</b><span class="small muted">القائد: ${esc(trackLeader(t).name)}</span></div>
+        <div class="row small" style="margin-top:6px"><span class="st st-plain">الأعضاء: ${rs.length}</span><span class="st st-escorted">في المناوبة: ${on}</span><span class="st st-received">في مرافقة: ${busy}</span><span class="st st-arrived">متاح: ${Math.max(on-busy,0)}</span></div></div>`;}).join('')}</div></section>`;
+
+  return head('لوحة القيادة الحية', 'غرفة العمليات', `${scopeName} · ${dFmt.format(Date.now())}`) +
+  gatePanel +
+  `<div class="kpis">
+    ${kpi(c('scheduled'),'لم يصلوا بعد','clock')}${kpi(c('near'),'قادمون (قريبون)','walk')}
+    ${kpi(atLeast('arrived'),'واصلون','pin')}${kpi(atLeast('received'),'تم استقبالهم','hand')}
+    ${kpi(c('escorted'),'رُوفقوا إلى وجهاتهم','target')}${kpi(openR,'طلبات مساعدة مفتوحة','life')}
+    ${kpi(overR,'طلبات متأخرة (+3 د)','alert',true)}${kpi(overT,'مهام متأخرة','list',true)}
+  </div>
+  <div class="row small muted" style="margin:10px 2px 18px">متوسط زمن الاستقبال بعد الوصول: <b style="color:#fff">${recT ?? '—'} د</b> · متوسط زمن استلام الطلب: <b style="color:#fff">${reqT ?? '—'} د</b></div>
+  <section class="card" style="margin-bottom:16px"><h2>${ic('gauge')}المسارات</h2>
+    <div class="board" style="${tracks.length===1?'grid-template-columns:minmax(0,1fr)':''}">${tracks.map(t=>{
+      const tg = gs.filter(g=>g.track===t);
+      return `<div class="col"><div class="spread"><h3>${TRACKS[t].name}</h3><span class="small muted">${GATES[TRACKS[t].gate].name}</span></div>
+        <div class="bar" style="margin:10px 0" aria-label="توزيع الحالات">${ORDER.map(s=>`<i style="width:${tg.filter(g=>g.status===s).length/Math.max(tg.length,1)*100}%;background:var(--s-${s})"></i>`).join('')}</div>
+        ${tg.slice().sort((x,y)=>ORDER.indexOf(y.status)-ORDER.indexOf(x.status)).map(g=>`<div class="gchip"><span class="dot-s" style="background:var(--s-${g.status})"></span><span class="nm">${esc(g.name)}</span><span class="small muted">${STATUS[g.status].label}${g.gate!==TRACKS[t].gate?' · '+g.gate:''}</span></div>`).join('')}</div>`;}).join('')}
+    </div>
+    <div class="row small" style="margin-top:12px">${ORDER.map(s=>`<span class="row" style="gap:6px"><span class="dot-s" style="background:var(--s-${s})"></span>${STATUS[s].label}</span>`).join('')}</div>
+  </section>
+  <div class="grid g2">
+    ${readiness}
+    <section class="card"><h2>${ic('alert')}يحتاج انتباهًا</h2><div class="list">
+      ${[...reqs.filter(r=>r.status!=='done').sort((x,y)=>(y.overdue-x.overdue)||x.createdAt-y.createdAt).slice(0,4).map(r=>reqCard(r,false)),
+         ...tasks.filter(taskOverdue).map(t=>`<div class="item overdue"><div class="spread"><b>${esc(t.title)}</b><span class="st st-danger">مهمة متأخرة</span></div><div class="small muted">${esc(who(t.assigneeId))} · الموعد ${fmtT(t.dueAt)}</div></div>`)].join('') || empty('لا توجد طلبات مفتوحة أو مهام متأخرة.')}
+    </div></section>
+    <section class="card" style="${a.role==='gate_officer'?'':'grid-column:1/-1'}"><h2>${ic('clock')}آخر التحديثات</h2>
+      <ul class="feed">${feed.map(e=>`<li><time>${fmtT(e.at)}</time><span>${esc(e.text)}</span></li>`).join('') || '<li>لا توجد أحداث.</li>'}</ul></section>
+  </div>`;
+}
+
+function viewSupport(){
+  const a = S.actor, m = me(), reqs = scopeRequests();
+  const canCreate = a.role!=='committee_rep';
+  const sub = a.role==='committee_rep' ? `ممثل لجنة ${COMMITTEES[m.committee]} — الطلبات الموجهة إلى لجنتك` : a.role==='leadership' ? 'جميع الطلبات لدى اللجان الخمس' : 'طلباتك وطلبات نطاقك';
+  const col = (st, title) => { const rs = reqs.filter(r=>r.status===st).sort((x,y)=>(y.overdue-x.overdue)||y.createdAt-x.createdAt);
+    return `<div class="col"><h3><span>${title}</span><span class="st st-plain">${rs.length}</span></h3><div class="list">${rs.map(r=>reqCard(r)).join('') || empty('لا يوجد')}</div></div>`; };
+  return head('اللجان المساندة', 'طلبات المساعدة', sub,
+      `<div class="row small">${Object.entries(COMMITTEES).map(([c,l])=>`<span class="st st-plain">${l}: ${esc(repOf(c).name)}</span>`).join('')}</div>`) +
+  `<div class="grid" style="grid-template-columns:${canCreate?'minmax(0,1fr) minmax(0,2.2fr)':'minmax(0,1fr)'}" id="supGrid">
+    ${canCreate ? `<section class="card glow"><h2>${ic('send')}طلب جديد</h2>${reqForm('s', scopeGuests())}<p class="small muted mt">إذا لم يُستلم الطلب خلال 3 دقائق يُصعَّد تلقائيًا إلى قائد المسار.</p></section>`:''}
+    <section><div class="kanban">${col('new','جديد')}${col('in_progress','قيد التنفيذ')}${col('done','مكتمل')}</div></section>
+  </div>`;
+}
+
+function viewTasks(){
+  const a = S.actor, m = me();
+  if (a.role!=='leadership'){
+    const ts = scopeTasks();
+    return head('توزيع المهام', a.role==='track_leader' ? 'مهام مسارك' : 'مهامي', 'العرض فقط — التعديل والإسناد لقيادة البروتوكول') +
+      `<div class="grid g2">${ts.map(t=>taskCard(t, can('task.status', t))).join('') || empty('لا توجد مهام مسندة إليك.')}</div>`;
+  }
+  const tab = S.tasksTab;
+  const tabs = {assign:'توزيع الضيوف', tasks:'المهام', team:'الفريق (42)', gates:'سجل تغيير البوابات'};
+  let body = '';
+  if (tab==='assign'){
+    const gs = S.guests.filter(g => S.assignFilter==='all' || g.track===S.assignFilter);
+    body = `<div class="chips" style="margin-bottom:12px">${[['all','كل المسارات'],...TRACK_IDS.map(t=>[t,TRACKS[t].short])].map(([v,l])=>`<button class="chip ${S.assignFilter===v?'on':''}" data-act="assign-filter" data-val="${v}">${l}</button>`).join('')}</div>
+    <div class="list"><div class="trow h"><span>الضيف</span><span>الحالة</span><span>المستقبل المكلف</span><span>البوابة ومسؤولها · القائد</span></div>
+    ${gs.map(g=>`<div class="trow"><div class="row" style="flex-wrap:nowrap;min-width:0">${hex(g.name,'sm')}<div style="min-width:0"><b>${esc(g.name)}</b><div class="small muted">${TRACKS[g.track].short}</div></div></div>
+      <div>${stChip(g.status)}</div>
+      <select class="sel" data-change="assign" data-gid="${g.id}" aria-label="المستقبل المكلف">${S.staff.filter(s=>s.role==='receptionist'&&s.track===g.track).map(s=>opt(s.id,s.name,s.id===g.receptionistId)).join('')}</select>
+      <div class="small">${GATES[g.gate].name} · ${esc(gateOfficer(g.gate).name)}<div class="muted">${esc(staff(g.trackLeaderId).name)}</div></div></div>`).join('')}</div>`;
+  } else if (tab==='tasks'){
+    body = `<div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,2fr)" id="taskGrid">
+      <section class="card glow"><h2>${ic('list')}مهمة جديدة</h2><div class="stack">
+        <label class="field"><span>عنوان المهمة</span><input class="inp" id="tTitle"></label>
+        <label class="field"><span>الوصف</span><textarea class="inp" id="tDesc"></textarea></label>
+        <label class="field"><span>المسؤول</span><select class="inp" id="tAssignee">${staffOptions()}</select></label>
+        <div class="field"><span>الأولوية</span>${chips('t-priority', PRIORITIES, S.form['t-priority'] || (S.form['t-priority']='medium'))}</div>
+        <label class="field"><span>الموعد</span><select class="inp" id="tDue">${[15,30,60,120,240].map(x=>opt(x, `بعد ${x>=60?x/60+' ساعة':x+' دقيقة'}`)).join('')}</select></label>
+        <button class="btn btn-primary btn-block" data-act="task-create">${ic('send')}إسناد المهمة</button></div></section>
+      <section><div class="list">${S.tasks.slice().sort((x,y)=>(taskOverdue(y)-taskOverdue(x))||x.dueAt-y.dueAt).map(t=>taskCard(t,true,true)).join('')}</div></section></div>`;
+  } else if (tab==='team'){
+    const roleF = S.teamFilter;
+    const list = S.staff.filter(s => roleF==='all' || s.role===roleF);
+    body = `<div class="chips" style="margin-bottom:12px">${[['all','الكل'],...Object.entries(ROLES).filter(([r])=>r!=='guest')].map(([v,l])=>`<button class="chip ${roleF===v?'on':''}" data-act="team-filter" data-val="${v}">${l} (${v==='all'?S.staff.length:S.staff.filter(s=>s.role===v).length})</button>`).join('')}</div>
+      <div class="list"><div class="trow h"><span>العضو</span><span>الدور والمسار</span><span>الموقع</span><span>المناوبة</span></div>
+      ${list.map(s=>`<div class="trow"><div class="row" style="flex-wrap:nowrap;min-width:0">${hex(s.name,'sm')}<div style="min-width:0"><b>${esc(s.name)}</b><div class="small muted">${s.id} · المسؤول المباشر: ${esc(s.manager?who(s.manager):'—')}</div></div></div>
+        <div class="small">${ROLES[s.role]}<div class="muted">${s.track?TRACKS[s.track].short:s.committee?'لجنة '+COMMITTEES[s.committee]:'—'}</div></div>
+        <div class="small">${esc(s.zone||'—')}${s.gate?`<div class="muted">${GATES[s.gate].name}</div>`:''}</div>
+        <select class="sel" data-change="shift" data-id="${s.id}" aria-label="المناوبة">${Object.entries(SHIFTS).map(([v,l])=>opt(v,l,v===s.shift)).join('')}</select></div>`).join('')}</div>`;
+  } else {
+    const ev = S.events.filter(e=>e.type==='GATE_CHANGED').slice().reverse();
+    body = `<div class="list">${ev.map(e=>`<div class="item spread"><span>${esc(e.text)}</span><span class="small muted">${fmtT(e.at)} · بواسطة ${esc(who(e.actorId))} · المسؤول الجديد: ${esc(gateOfficer(e.gate).name)}</span></div>`).join('') || empty('لا توجد تغييرات بوابات بعد.')}</div>`;
+  }
+  return head('توزيع المهام', 'إدارة الفريق والتكليفات', '42 عضوًا · 40 ضيفًا · التعديل لقيادة البروتوكول فقط') +
+    `<div class="tabs" role="tablist">${Object.entries(tabs).map(([k,l])=>`<button class="tab ${tab===k?'on':''}" role="tab" aria-selected="${tab===k}" data-act="tab" data-tab="${k}">${l}</button>`).join('')}</div>${body}`;
+}
+function staffOptions(sel){
+  const groups = [['leadership'],['track_leader'],['receptionist'],['gate_officer'],['committee_rep']];
+  return groups.map(([r]) => `<optgroup label="${ROLES[r]}">${S.staff.filter(s=>s.role===r).map(s=>opt(s.id, s.name+(s.track?' · '+TRACKS[s.track].short:s.gate?' · '+GATES[s.gate].name:s.committee?' · '+COMMITTEES[s.committee]:''), s.id===sel)).join('')}</optgroup>`).join('');
+}
+function taskCard(t, canStatus, canEdit){
+  const od = taskOverdue(t);
+  return `<article class="item ${od?'overdue':''}">
+    <div class="spread"><b>${esc(t.title)}</b><div class="row">${prChip(t.priority)}<span class="st ${t.status==='done'?'st-escorted':t.status==='in_progress'?'st-arrived':'st-plain'}">${TASK_ST[t.status]}</span>${od?'<span class="st st-danger">متأخرة</span>':''}</div></div>
+    ${t.description?`<p class="small" style="margin:6px 0">${esc(t.description)}</p>`:''}
+    <div class="small muted">${t.id} · المسؤول: ${esc(who(t.assigneeId))} · الموعد ${fmtT(t.dueAt)} · آخر تحديث ${fmtT(t.updatedAt)}</div>
+    <div class="row mt">
+      ${canEdit ? `<select class="sel" data-change="task-assignee" data-id="${t.id}" aria-label="إعادة الإسناد" style="flex:1;min-width:180px">${staffOptions(t.assigneeId)}</select>`:''}
+      ${canStatus && t.status==='new' ? `<button class="btn btn-sm btn-primary" data-act="task-status" data-id="${t.id}" data-to="in_progress">بدء التنفيذ</button>`:''}
+      ${canStatus && t.status==='in_progress' ? `<button class="btn btn-sm btn-ok" data-act="task-status" data-id="${t.id}" data-to="done">${ic('check')}إكمال</button>`:''}
+    </div></article>`;
+}
+
+function buildReport(track, period){
+  const now = Date.now();
+  const from = period==='1h' ? now-3600e3 : period==='3h' ? now-3*3600e3 : (()=>{ const d=new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+  const inT = t => track==='all' || t===track;
+  const gs = S.guests.filter(g=>inT(g.track));
+  const ge = s => gs.filter(g=>ORDER.indexOf(g.status)>=ORDER.indexOf(s)).length;
+  const recT = avg(gs.filter(g=>g.times.received>=from && g.times.arrived).map(g=>(g.times.received-g.times.arrived)/60000));
+  const reqs = S.requests.filter(r=>r.createdAt>=from && inT(r.track));
+  const byC = Object.entries(COMMITTEES).map(([c,l])=>[l, reqs.filter(r=>r.committee===c).length]).filter(x=>x[1]);
+  const rT = avg(reqs.filter(r=>r.receivedAt).map(r=>(r.receivedAt-r.createdAt)/60000));
+  const ts = S.tasks.filter(t=>track==='all' || staff(t.assigneeId).track===track);
+  const odT = ts.filter(taskOverdue);
+  const locs = {}; reqs.forEach(r=>locs[r.location]=(locs[r.location]||0)+1);
+  const rep = [...byC.filter(x=>x[1]>=2).map(x=>`لجنة ${x[0]}: ${x[1]} طلبات`), ...Object.entries(locs).filter(x=>x[1]>=2).map(x=>`الموقع «${x[0]}»: ${x[1]} طلبات`)];
+  const gc = S.events.filter(e=>e.type==='GATE_CHANGED' && e.at>=from && inT(e.track)).length;
+  const pending = gs.filter(g=>g.status==='scheduled');
+  const periodL = {day:'كامل اليوم', '1h':'آخر ساعة', '3h':'آخر 3 ساعات'}[period];
+  const stats = {total:gs.length, arrived:ge('arrived'), received:ge('received'), escorted:ge('escorted'), reqs:reqs.length, open:reqs.filter(r=>r.status!=='done').length, escalated:reqs.filter(r=>r.escalatedTo||r.overdue).length, tasksDone:ts.filter(t=>t.status==='done').length, tasks:ts.length};
+  const text =
+`التقرير التشغيلي اليومي — اليوم الأول ${dFmt.format(now)}
+النطاق: ${track==='all'?'جميع المسارات':TRACKS[track].name} | الفترة: ${periodL} حتى ${fmtT(now)} (توقيت الرياض)
+
+أولًا: الضيوف
+- إجمالي الضيوف: ${stats.total}، وصل منهم ${stats.arrived}، واستُقبل ${stats.received}، ورُوفق إلى وجهته ${stats.escorted}.
+- متوسط زمن الاستقبال بعد الوصول: ${recT ?? '—'} دقيقة.
+- ضيوف لم يصلوا بعد (${pending.length}): ${pending.length ? pending.map(g=>g.name).join('، ') : 'لا يوجد'}.
+
+ثانيًا: طلبات المساعدة
+- أُنشئ ${stats.reqs} طلب${byC.length ? ': '+byC.map(x=>`${x[0]} ${x[1]}`).join('، ') : ''}. أُغلق ${reqs.filter(r=>r.status==='done').length}، وما زال ${stats.open} مفتوحًا.
+- طلبات تجاوزت 3 دقائق وصُعّدت: ${stats.escalated}.
+- متوسط زمن الاستلام: ${rT ?? '—'} دقيقة.
+
+ثالثًا: المهام
+- ${stats.tasksDone} من ${stats.tasks} مكتملة. المهام المتأخرة: ${odT.length ? odT.map(t=>t.title).join('، ') : 'لا يوجد'}.
+
+رابعًا: المشكلات المتكررة
+- ${rep.length ? rep.join('؛ ') : 'لا توجد مشكلات متكررة'}.
+
+خامسًا: تغييرات البوابات
+- ${gc} تغيير بوابة خلال الفترة.`;
+  return {text, stats};
+}
+
+function viewReports(){
+  const {stats} = buildReport(S.repTrack, S.repPeriod);
+  const draft = S.reports.find(r=>r.id===S.draftId);
+  const tile = (n,l) => `<div class="kpi"><div class="hex">${ic('gauge')}</div><div><div class="n">${n}</div><div class="l">${l}</div></div></div>`;
+  return head('التقارير', 'التقرير التشغيلي اليومي', 'قالب آلي من سجل الأحداث — يراجع ويعدّل ويعتمد بشريًا قبل المشاركة') +
+  `<section class="card" style="margin-bottom:16px"><div class="grid g3">
+    <label class="field"><span>المسار</span><select class="inp" data-change="rep-track">${opt('all','جميع المسارات',S.repTrack==='all')}${TRACK_IDS.map(t=>opt(t,TRACKS[t].name,S.repTrack===t)).join('')}</select></label>
+    <label class="field"><span>الفترة</span><select class="inp" data-change="rep-period">${[['day','كامل اليوم'],['3h','آخر 3 ساعات'],['1h','آخر ساعة']].map(([v,l])=>opt(v,l,S.repPeriod===v)).join('')}</select></label>
+    <div class="field"><span>&nbsp;</span><button class="btn btn-primary" data-act="report-gen">${ic('file')}إنشاء التقرير</button></div>
+  </div></section>
+  <div class="kpis" style="margin-bottom:16px">${tile(stats.arrived+' / '+stats.total,'الواصلون')}${tile(stats.received,'تم استقبالهم')}${tile(stats.open+' / '+stats.reqs,'طلبات مفتوحة / الإجمالي')}${tile(stats.tasksDone+' / '+stats.tasks,'مهام مكتملة')}</div>
+  <div class="grid g2">
+    <section class="card ${draft?'glow':''}" style="grid-column:${S.reports.length>1?'auto':'1/-1'}">
+      <h2>${ic('file')}${draft ? (draft.status==='approved' ? 'تقرير معتمد' : 'مسودة التقرير — قابلة للتعديل') : 'لا توجد مسودة'}</h2>
+      ${draft ? `<textarea class="inp reportbox ${draft.status==='approved'?'locked':''}" id="repBody" data-input="report" ${draft.status==='approved'?'readonly':''} aria-label="نص التقرير">${esc(draft.body)}</textarea>
+        <div class="row mt">${draft.status==='approved'
+          ? `<span class="st st-escorted">${ic('check')}اعتمده ${esc(who(draft.approvedBy))} الساعة ${fmtT(draft.approvedAt)}</span><button class="btn btn-sm btn-primary" data-act="report-copy">${ic('copy')}نسخ النص للمشاركة</button>`
+          : `<button class="btn btn-ok" data-act="report-approve">${ic('check')}اعتماد التقرير</button><span class="small muted">لا يمكن مشاركة التقرير قبل اعتماده.</span>`}</div>`
+        : empty('اختر المسار والفترة ثم اضغط «إنشاء التقرير». الأرقام تؤخذ من سجل الأحداث مباشرة.')}
+    </section>
+    ${S.reports.length>1 ? `<section class="card"><h2>${ic('list')}تقارير سابقة</h2><div class="list">${S.reports.slice().reverse().map(r=>`<button class="item spread" style="cursor:pointer;text-align:start" data-act="report-open" data-id="${r.id}"><span>${r.scope}</span><span class="st ${r.status==='approved'?'st-escorted':'st-plain'}">${r.status==='approved'?'معتمد':'مسودة'} · ${fmtT(r.at)}</span></button>`).join('')}</div></section>`:''}
+  </div>`;
+}
+
+// ---------- shell rendering ----------
+function render(){
+  const a = S.actor;
+  const allowed = PAGES.filter(p => p.roles.includes(a.role));
+  if (!allowed.some(p=>p.id===S.page)) S.page = HOME[a.role];
+  const navHTML = allowed.map(p=>`<button class="navbtn ${S.page===p.id?'on':''}" data-act="go" data-page="${p.id}" ${S.page===p.id?'aria-current="page"':''}>${ic(p.icon)}<span>${p.label}</span></button>`).join('');
+  $('#rail').innerHTML = navHTML + `<div class="rail-foot">بيانات تجريبية فقط: 40 ضيفًا و42 عضوًا. تعود البيانات الأصلية عند إعادة فتح الصفحة.</div>`;
+  $('#bottomnav').innerHTML = navHTML;
+  renderSwitcher();
+  const v = {guest:viewGuest, reception:viewReception, dashboard:viewDashboard, support:viewSupport, tasks:viewTasks, reports:viewReports}[S.page];
+  $('#view').innerHTML = v() + `<p class="foot-note">EventOps AI · نموذج أولي · جميع الأسماء والأرقام وهمية · توقيت الرياض</p>`;
+  fitGrids();
+}
+function fitGrids(){
+  if (window.innerWidth <= 900) ['#supGrid','#taskGrid'].forEach(s => { const el = $(s); if (el) el.style.gridTemplateColumns = 'minmax(0,1fr)'; });
+}
+function renderSwitcher(){
+  const a = S.actor;
+  $('#roleSel').innerHTML = Object.entries(ROLES).map(([r,l]) => opt(r, l, r===a.role)).join('');
+  const people = a.role==='guest' ? S.guests.map(g=>[g.id, `${g.name} · ${TRACKS[g.track].short} · ${STATUS[g.status].label}`])
+    : S.staff.filter(s=>s.role===a.role).map(s=>[s.id, s.name + (s.track?' · '+TRACKS[s.track].short : s.gate?' · '+GATES[s.gate].name : s.committee?' · '+COMMITTEES[s.committee] : s.title?' · '+s.title:'')]);
+  $('#personSel').innerHTML = people.map(([id,l]) => opt(id, l, id===a.id)).join('');
+  const unread = S.notifs.filter(x=>x.recipientId===a.id && !x.read).length;
+  $('#bellBtn').innerHTML = ic('bell') + (unread ? `<span class="badge">${unread}</span>` : '');
+  document.querySelector('[data-act="ideas"]').innerHTML = ic('bulb');
+}
+function defaultPerson(role){
+  const g = guest(S.ctxGuest);
+  return {guest:g.id, receptionist:g.receptionistId, gate_officer:gateOfficer(g.gate).id, track_leader:g.trackLeaderId,
+          committee_rep:(S.requests.filter(r=>r.status!=='done').slice(-1)[0] ? repOf(S.requests.filter(r=>r.status!=='done').slice(-1)[0].committee) : repOf('parking')).id,
+          leadership:'STF-01'}[role];
+}
+function openPanel(){
+  const p = $('#notifPanel'), a = S.actor;
+  if (p.classList.contains('open')){ p.classList.remove('open'); return; }
+  const list = S.notifs.filter(x=>x.recipientId===a.id).slice().reverse();
+  p.innerHTML = `<div class="spread" style="margin-bottom:10px"><b>إشعارات ${esc(who(a.id))}</b><button class="iconbtn" data-act="close-panel" aria-label="إغلاق">${ic('x')}</button></div>
+    <ul class="feed">${list.map(x=>`<li class="${x.read?'':'unread'}"><time>${fmtT(x.at)}</time><span>${esc(x.text)}</span></li>`).join('') || '<li>لا توجد إشعارات.</li>'}</ul>`;
+  p.classList.add('open');
+  list.forEach(x=>x.read=true); renderSwitcher();
+}
+function openModal(html){ $('#modalBox').innerHTML = html; $('#modal').classList.add('open'); const f = $('#modalBox').querySelector('textarea,input,select'); if (f) f.focus(); }
+function closeModal(){ $('#modal').classList.remove('open'); $('#modalBox').innerHTML = ''; }
+
+const IDEAS = [
+  ['مهلة تصعيد حسب الأولوية','مثلًا دقيقتان للطلب العاجل و5 دقائق للعادي بدل مهلة ثابتة.'],
+  ['تصعيد متدرج','إذا لم يتصرف قائد المسار خلال مهلة إضافية يُرفع الطلب إلى قيادة البروتوكول.'],
+  ['رمز QR لكل ضيف','يفتح بوابته الخاصة مباشرة، على غرار رموز QR في الستاندات الإرشادية.'],
+  ['خريطة مصغرة للموقع','تبين البوابات الأربع والوجهات (المسرح، القاعات A1/A2، معرض رواد الأعمال) على مخطط الموقع.'],
+  ['تصدير التقرير المعتمد','بصيغة PDF بهوية الهاكاثون.'],
+  ['تنبيه صوتي أو اهتزاز','على جوال عضو الاستقبال لحظة وصول ضيفه.'],
+  ['زر «تسريع الوقت» في وضع التجربة','لاختبار التصعيد دون انتظار 3 دقائق فعلية.'],
+  ['استبيان رضا قصير','يظهر للضيف بعد المرافقة.'],
+  ['المزامنة بين أكثر من جهاز','حتى يرى المستقبل وصول الضيف على جواله لحظيًا (يتطلب قاعدة بيانات مشتركة).']
+];
+
+// ---------- events ----------
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b){ if (e.target===$('#modal')) closeModal(); return; }
+  const act = b.dataset.act, a = S.actor;
+  switch(act){
+    case 'go': S.page = b.dataset.page; render(); window.scrollTo({top:0}); break;
+    case 'bell': openPanel(); break;
+    case 'close-panel': $('#notifPanel').classList.remove('open'); render(); break;
+    case 'ideas': openModal(`<div class="spread" style="margin-bottom:12px"><h2 style="display:flex;gap:8px;align-items:center">${ic('bulb')}أفكار للاحقًا</h2><button class="iconbtn" data-act="close-modal" aria-label="إغلاق">${ic('x')}</button></div>
+      <p class="small muted">مقترحات خارج نطاق المتطلبات المعتمدة، لم تُنفذ في هذا النموذج.</p><div class="list">${IDEAS.map(([t,d])=>`<div class="item"><b>${t}</b><div class="small muted">${d}</div></div>`).join('')}</div>`); break;
+    case 'close-modal': closeModal(); break;
+    case 'pick': S.form[b.dataset.group] = b.dataset.val;
+      document.querySelectorAll(`[data-group="${b.dataset.group}"]`).forEach(x => { const on = x.dataset.val===b.dataset.val; x.classList.toggle('on', on); x.setAttribute('aria-checked', on); }); break;
+    case 'gstatus': guestTo(guest(b.dataset.gid), b.dataset.to); break;
+    case 'gate': { const g = me(); if (!can('guest.self', g)) return deny(); if (g.gate===b.dataset.gate) return toast('هذه هي بوابتك الحالية.', 'info'); changeGate(g, b.dataset.gate, a.id); render(); break; }
+    case 'parking': { const g = me(); const v = $('#parkInp').value.trim().toUpperCase();
+      if (!v) return toast('اكتب رقم الموقف أولًا.', 'err');
+      if (v===g.parking) return toast('رقم الموقف محفوظ مسبقًا.', 'info');
+      g.parking = v; const t = `${g.name} حدد الموقف ${v}`;
+      logEvent('PARKING_SET', a.id, g.id, t, Date.now(), {track:g.track, gate:g.gate}); notify([g.receptionistId], t);
+      toast('تم حفظ رقم الموقف وإبلاغ المستقبل.'); render(); break; }
+    case 'req-submit': submitReq(b.dataset.prefix); break;
+    case 'support-open': { const gid = b.dataset.gid; delete S.form['m-committee'];
+      openModal(`<div class="spread" style="margin-bottom:12px"><h2>طلب دعم — ${esc(guest(gid).name)}</h2><button class="iconbtn" data-act="close-modal" aria-label="إغلاق">${ic('x')}</button></div>${reqForm('m', scopeGuests(), gid)}`); break; }
+    case 'delay-open': openModal(`<div class="spread" style="margin-bottom:12px"><h2>الإبلاغ عن تأخير — ${esc(guest(b.dataset.gid).name)}</h2><button class="iconbtn" data-act="close-modal" aria-label="إغلاق">${ic('x')}</button></div>
+      <label class="field"><span>سبب التأخير</span><textarea class="inp" id="delayTxt" placeholder="مثال: ازدحام عند المدخل"></textarea></label>
+      <button class="btn btn-warn btn-block mt" data-act="delay-submit" data-gid="${b.dataset.gid}">${ic('send')}إبلاغ قائد المسار</button>`); break;
+    case 'delay-submit': { const g = guest(b.dataset.gid), r = $('#delayTxt').value.trim();
+      if (!r) return toast('اكتب سبب التأخير.', 'err');
+      const t = `تأخير في استقبال ${g.name}: ${r}`; logEvent('RECEPTION_DELAY_REPORTED', a.id, g.id, t, Date.now(), {track:g.track, gate:g.gate});
+      notify([g.trackLeaderId], t); closeModal(); toast('تم إبلاغ قائد المسار.'); render(); break; }
+    case 'req': { const r = S.requests.find(x=>x.id===b.dataset.id); setReq(r, b.dataset.to, a.id); break; }
+    case 'mark-read': S.notifs.filter(x=>x.recipientId===a.id).forEach(x=>x.read=true); render(); break;
+    case 'tab': S.tasksTab = b.dataset.tab; render(); break;
+    case 'assign-filter': S.assignFilter = b.dataset.val; render(); break;
+    case 'team-filter': S.teamFilter = b.dataset.val; render(); break;
+    case 'task-create': { if (!can('task.edit')) return deny();
+      const title = $('#tTitle').value.trim(); if (!title) return toast('اكتب عنوان المهمة.', 'err');
+      const ass = $('#tAssignee').value; S.taskSeq++;
+      const t = {id:'TSK-'+String(S.taskSeq).padStart(3,'0'), title, description:$('#tDesc').value.trim(), assigneeId:ass, priority:S.form['t-priority']||'medium', dueAt:Date.now()+(+$('#tDue').value)*60000, status:'new', updatedAt:Date.now()};
+      S.tasks.push(t); logEvent('TASK_CREATED', a.id, t.id, `أُسندت مهمة «${title}» إلى ${who(ass)}`, Date.now(), {track:staff(ass).track, gate:staff(ass).gate});
+      notify([ass], `مهمة جديدة: ${title}`); toast(`تم إسناد المهمة إلى ${who(ass)}.`); render(); break; }
+    case 'task-status': { const t = S.tasks.find(x=>x.id===b.dataset.id); if (!can('task.status', t)) return deny();
+      if (t.status===b.dataset.to) return toast('تم التحديث مسبقًا.', 'info');
+      t.status = b.dataset.to; t.updatedAt = Date.now();
+      logEvent('TASK_STATUS_CHANGED', a.id, t.id, `المهمة «${t.title}» أصبحت ${TASK_ST[t.status]}`, Date.now(), {track:staff(t.assigneeId).track, gate:staff(t.assigneeId).gate});
+      toast(`المهمة الآن: ${TASK_ST[t.status]}`); render(); break; }
+    case 'report-gen': { if (!can('report')) return deny();
+      const {text} = buildReport(S.repTrack, S.repPeriod);
+      const r = {id:uid(), body:text, status:'draft', at:Date.now(), scope:(S.repTrack==='all'?'جميع المسارات':TRACKS[S.repTrack].short)+' · '+{day:'كامل اليوم','1h':'آخر ساعة','3h':'آخر 3 ساعات'}[S.repPeriod], approvedBy:null, approvedAt:null};
+      S.reports.push(r); S.draftId = r.id; logEvent('REPORT_GENERATED', a.id, r.id, `أُنشئ تقرير تشغيلي (${r.scope})`);
+      toast('تم إنشاء مسودة التقرير من سجل الأحداث.'); render(); break; }
+    case 'report-approve': { const r = S.reports.find(x=>x.id===S.draftId); if (!can('report')) return deny();
+      r.body = $('#repBody').value; r.status='approved'; r.approvedBy=a.id; r.approvedAt=Date.now();
+      logEvent('REPORT_APPROVED', a.id, r.id, `اعتُمد التقرير التشغيلي (${r.scope})`); toast('تم اعتماد التقرير، ويمكن مشاركته الآن.'); render(); break; }
+    case 'report-copy': { const r = S.reports.find(x=>x.id===S.draftId);
+      (navigator.clipboard ? navigator.clipboard.writeText(r.body) : Promise.reject()).then(()=>toast('تم نسخ نص التقرير.'), ()=>toast('تعذر النسخ، حدد النص وانسخه يدويًا.', 'err')); break; }
+    case 'report-open': S.draftId = b.dataset.id; render(); break;
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target, k = el.dataset.change; if (!k) return;
+  const a = S.actor;
+  if (k==='role'){ const role = el.value; S.actor = {role, id:defaultPerson(role)}; S.page = HOME[role]; $('#notifPanel').classList.remove('open'); render(); toast(`أنت الآن: ${ROLES[role]} — ${who(S.actor.id)}`); }
+  else if (k==='person'){ S.actor = {role:a.role, id:el.value}; if (a.role==='guest') S.ctxGuest = el.value; $('#notifPanel').classList.remove('open'); render(); }
+  else if (k==='assign'){ if (!can('task.edit')) return deny(); const g = guest(el.dataset.gid), old = g.receptionistId; g.receptionistId = el.value;
+    const t = `أُعيد إسناد ${g.name} من ${who(old)} إلى ${who(el.value)}`; logEvent('GUEST_REASSIGNED', a.id, g.id, t, Date.now(), {track:g.track, gate:g.gate}); notify([old, el.value], t); toast(t); render(); }
+  else if (k==='task-assignee'){ if (!can('task.edit')) return deny(); const t = S.tasks.find(x=>x.id===el.dataset.id), old = t.assigneeId; t.assigneeId = el.value; t.updatedAt = Date.now();
+    const tx = `أُعيد إسناد المهمة «${t.title}» من ${who(old)} إلى ${who(el.value)}`; logEvent('TASK_REASSIGNED', a.id, t.id, tx, Date.now(), {track:staff(el.value).track}); notify([old, el.value], tx); toast(tx); render(); }
+  else if (k==='shift'){ if (!can('task.edit')) return deny(); const s = staff(el.dataset.id); s.shift = el.value;
+    logEvent('SHIFT_CHANGED', a.id, s.id, `تغيّرت مناوبة ${s.name} إلى ${SHIFTS[s.shift]}`, Date.now(), {track:s.track, gate:s.gate}); toast('تم تحديث المناوبة.'); }
+  else if (k==='rep-track'){ S.repTrack = el.value; render(); }
+  else if (k==='rep-period'){ S.repPeriod = el.value; render(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.dataset.input==='report'){ const r = S.reports.find(x=>x.id===S.draftId); if (r && r.status==='draft') r.body = e.target.value; }
+});
+document.addEventListener('keydown', e => { if (e.key==='Escape'){ closeModal(); $('#notifPanel').classList.remove('open'); } });
+window.addEventListener('resize', fitGrids);
+
+// escalation watcher: re-render only when nothing is being typed
+setInterval(() => {
+  if (checkEscalations(false)){
+    const typing = document.activeElement && ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName) && $('#view').contains(document.activeElement);
+    if (typing || $('#modal').classList.contains('open')) renderSwitcher(); else render();
+  }
+}, 5000);
+
+seed();
+render();
+</script>
